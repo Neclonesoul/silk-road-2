@@ -149,7 +149,17 @@ export async function sessionUser(db: D1Database, tokenHash: string): Promise<Se
     )
     .bind(tokenHash)
     .first<SessionUser>();
-  return row ? { ...row, emailVerified: Boolean(row.emailVerified) } : null;
+  return row
+    ? {
+        id: String(row.id),
+        email: String(row.email),
+        role: row.role,
+        emailVerified: Boolean(row.emailVerified),
+        handle: String(row.handle),
+        displayName: String(row.displayName),
+        avatarKey: row.avatarKey == null ? null : String(row.avatarKey)
+      }
+    : null;
 }
 
 export async function audit(
