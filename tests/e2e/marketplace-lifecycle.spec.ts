@@ -38,7 +38,20 @@ test('seller publishes, buyer favourites and contacts, seller marks sold', async
   await page.goto('/sell');
   await page.getByLabel('Listing title').fill(title);
   await page.getByLabel('Category').selectOption('other');
+  const draftForm = page.locator('form.start');
+  const draftFormValid = await draftForm.evaluate((form) =>
+    (form as HTMLFormElement).checkValidity()
+  );
+  const draftResponsePromise = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'POST' && new URL(response.url()).pathname === '/sell'
+  );
   await page.getByRole('button', { name: /Continue/ }).click();
+  const draftResponse = await draftResponsePromise;
+  const draftBody = (await draftResponse.text()).replace(/\\s+/g, ' ').slice(0, 800);
+  console.log(
+    `DRAFT_DIAGNOSTIC valid=${draftFormValid} status=${draftResponse.status()} body=${draftBody}`
+  );
   await expectNavigationOrExplain(page, /\/sell\/[a-f0-9-]+/, 'Draft creation');
 
   await page
