@@ -7,5 +7,10 @@ export const load = async ({ platform, locals }) => {
     categories(platform.env.DB),
     listings(platform.env.DB, { sort: 'newest', page: 1 }, locals.user?.id)
   ]);
-  return plain({ categories: allCategories, fresh: fresh.slice(0, 12), featured: [], setup: false });
+  return plain({
+    categories: allCategories,
+    fresh: fresh.slice(0, 12),
+    featured: [],
+    setup: false
+  });
 };
