@@ -24,11 +24,35 @@ export const actions = {
         .first())
     )
       return fail(400, { message: 'Choose a valid category.' });
+    const profile = await db
+      .prepare('SELECT locality, region FROM profiles WHERE user_id = ?')
+      .bind(locals.user.id)
+      .first<{ locality: string; region: string }>();
+
+    if (!profile)
+      return fail(409, {
+        message: 'Complete your seller profile before creating a listing.',
+        title,
+        categoryId
+      });
+
     const id = crypto.randomUUID();
     const slug = `${slugify(title)}-${id.slice(0, 8)}`;
-    await db
+    const result = await db
       .prepare(
-        "INSERT INTO listings (id, seller_id, category_id, slug, title, description, condition, price_cents, locality, region, status) SELECT ?, ?, ?, ?, ?, ?, 'good', 0, locality, region, 'draft' FROM profiles WHERE user_id = ?"
+        `INSERT INTO listings (
+          id,
+          seller_id,
+          category_id,
+          slug,
+          title,
+          description,
+          condition,
+          price_cents,
+          locality,
+          region,
+          status
+        ) VALUES (?, ?, ?, ?, ?, ?, 'good', 0, ?, ?, 'draft')`
       )
       .bind(
         id,
@@ -37,9 +61,18 @@ export const actions = {
         slug,
         title,
         'Add an honest, useful description before publishing.',
-        locals.user.id
+        profile.locality,
+        profile.region
       )
       .run();
+
+    if (!result.success || result.meta.changes !== 1)
+      return fail(500, {
+        message: 'The listing draft could not be created. Please try again.',
+        title,
+        categoryId
+      });
+
     redirect(303, `/sell/${id}`);
   }
 };
