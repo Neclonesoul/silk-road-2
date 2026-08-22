@@ -3,9 +3,7 @@
   "name": "silk-road-2",
   "main": ".svelte-kit/cloudflare/_worker.js",
   "compatibility_date": "2026-08-01",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
+  "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": ".svelte-kit/cloudflare",
     "binding": "ASSETS"
@@ -35,9 +33,7 @@
   "migrations": [
     {
       "tag": "v1",
-      "new_sqlite_classes": [
-        "ChatRoom"
-      ]
+      "new_sqlite_classes": ["ChatRoom"]
     }
   ],
   "vars": {
