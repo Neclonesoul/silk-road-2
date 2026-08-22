@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { requireDb } from '$server/db';
+import { plain } from '$lib/server/db';
 
 export const load = async ({ params, platform, locals }) => {
   const db = requireDb(platform);
@@ -28,5 +29,5 @@ export const load = async ({ params, platform, locals }) => {
           .first()
       )
     : false;
-  return { seller, listings: listingResults.results, soldCount: sold?.count || 0, blocked };
+  return plain({ seller, listings: listingResults.results, soldCount: sold?.count || 0, blocked });
 };

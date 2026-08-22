@@ -1,5 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import { requireDb } from '$server/db';
+import { plain } from '$lib/server/db';
 
 export const load = async ({ platform, locals }) => {
   if (!locals.user) redirect(303, '/auth/login?returnTo=/you/listings');
@@ -9,5 +10,5 @@ export const load = async ({ platform, locals }) => {
     )
     .bind(locals.user.id)
     .all();
-  return { listings: result.results };
+  return plain({ listings: result.results });
 };

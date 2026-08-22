@@ -2,6 +2,7 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import { requireDb, audit } from '$server/db';
 import { listingSchema, firstIssue } from '$server/validation';
 import { toCents } from '$lib/utils';
+import { plain } from '$lib/server/db';
 
 async function ownedDraft(db: D1Database, id: string, userId: string) {
   return db
@@ -30,12 +31,12 @@ export const load = async ({ params, platform, locals }) => {
       .bind(params.id)
       .all()
   ]);
-  return {
+  return plain({
     listing,
     categories: categoryList.results,
     attributes: attributes.results,
     images: images.results
-  };
+  });
 };
 
 export const actions = {

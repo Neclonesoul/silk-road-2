@@ -1,10 +1,11 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { categories, requireDb } from '$server/db';
 import { slugify } from '$lib/utils';
+import { plain } from '$lib/server/db';
 
 export const load = async ({ platform, locals }) => {
   if (!locals.user) redirect(303, '/auth/login?returnTo=/sell');
-  return { categories: await categories(requireDb(platform)) };
+  return plain({ categories: await categories(requireDb(platform)) });
 };
 
 export const actions = {

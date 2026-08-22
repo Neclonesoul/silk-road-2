@@ -2,6 +2,7 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import { canAccessConversation, requireDb } from '$server/db';
 import { messageSchema } from '$server/validation';
 import { allowRequest } from '$server/rate-limit';
+import { plain } from '$lib/server/db';
 
 export const load = async ({ params, platform, locals }) => {
   if (!locals.user) redirect(303, `/auth/login?returnTo=/messages/${params.conversationId}`);
@@ -26,7 +27,7 @@ export const load = async ({ params, platform, locals }) => {
     )
     .bind(params.conversationId, locals.user.id)
     .run();
-  return { conversation, messages: messages.results };
+  return plain({ conversation, messages: messages.results });
 };
 
 export const actions = {

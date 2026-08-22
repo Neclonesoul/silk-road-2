@@ -2,6 +2,10 @@ import { error } from '@sveltejs/kit';
 import { limits } from '$lib/config';
 import type { Category, ListingCard, SearchInput, SessionUser } from '$lib/types';
 
+export function plain<T>(value: T): T {
+  return value == null ? value : JSON.parse(JSON.stringify(value));
+}
+
 export function requireDb(platform: App.Platform | undefined): D1Database {
   if (!platform?.env.DB) error(503, 'The marketplace database is not connected yet.');
   return platform.env.DB;

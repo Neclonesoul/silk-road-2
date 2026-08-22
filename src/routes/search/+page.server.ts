@@ -1,5 +1,6 @@
 import { categories, listings } from '$server/db';
 import { searchSchema } from '$server/validation';
+import { plain } from '$lib/server/db';
 
 export const load = async ({ url, platform, locals }) => {
   if (!platform?.env.DB) return { categories: [], results: [], filters: {}, setup: true };
@@ -18,5 +19,5 @@ export const load = async ({ url, platform, locals }) => {
       locals.user?.id
     )
   ]);
-  return { categories: allCategories, results, filters, setup: false };
+  return plain({ categories: allCategories, results, filters, setup: false });
 };

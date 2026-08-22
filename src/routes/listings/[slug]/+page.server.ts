@@ -1,5 +1,6 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { listingBySlug, requireDb } from '$server/db';
+import { plain } from '$lib/server/db';
 
 export const load = async ({ params, platform, locals }) => {
   const db = requireDb(platform);
@@ -12,7 +13,7 @@ export const load = async ({ params, platform, locals }) => {
     )
     .bind(record.category_id, record.id)
     .all();
-  return { listing, related: related.results };
+  return plain({ listing, related: related.results });
 };
 
 export const actions = {
