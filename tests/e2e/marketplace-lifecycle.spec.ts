@@ -2,21 +2,14 @@ import { expect, test, type Page } from '@playwright/test';
 
 const password = 'Market-Test-Passphrase-9';
 
-async function expectNavigationOrExplain(
-  page: Page,
-  expected: RegExp,
-  context: string
-) {
+async function expectNavigationOrExplain(page: Page, expected: RegExp, context: string) {
   try {
     await expect(page).toHaveURL(expected);
   } catch {
     const alerts = await page.locator('.alert').allTextContents();
     const messages = alerts.map((value) => value.trim()).filter(Boolean);
-    throw new Error(
-      `${context} failed at ${page.url()}. Server message: ${
-        messages.join(' | ') || 'No visible form error was returned.'
-      }`
-    );
+    const serverMessage = messages.join(' | ') || 'No visible form error was returned.';
+    throw new Error(`${context} failed at ${page.url()}. Server message: ${serverMessage}`);
   }
 }
 
