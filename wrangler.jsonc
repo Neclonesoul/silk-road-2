@@ -1,0 +1,53 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "silk-road-2",
+  "main": ".svelte-kit/cloudflare/_worker.js",
+  "compatibility_date": "2026-08-01",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "assets": {
+    "directory": ".svelte-kit/cloudflare",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "silk-road-db",
+      "database_id": "0192c3d6-d481-4fde-a862-a59e3515f708",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "silk-road-media"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "CHAT_ROOMS",
+        "class_name": "ChatRoom"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "ChatRoom"
+      ]
+    }
+  ],
+  "vars": {
+    "APP_ENV": "production",
+    "SESSION_COOKIE_NAME": "silk_session",
+    "PUBLIC_APP_NAME": "Silk Road 2.0",
+    "PUBLIC_APP_SHORT_NAME": "Silk Road",
+    "PUBLIC_APP_DESCRIPTION": "Find it. Sell it. Talk directly.",
+    "PUBLIC_APP_URL": "https://market.tysonbarnes.co.uk",
+    "PUBLIC_SUPPORT_EMAIL": "admin@darktech.co.za",
+    "PUBLIC_TURNSTILE_SITE_KEY": "0x4AAAAAAEYlN43tVJ-KmE8l"
+  }
+}
