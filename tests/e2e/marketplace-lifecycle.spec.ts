@@ -2,6 +2,24 @@ import { expect, test, type Page } from '@playwright/test';
 
 const password = 'Market-Test-Passphrase-9';
 
+async function expectNavigationOrExplain(
+  page: Page,
+  expected: RegExp,
+  context: string
+) {
+  try {
+    await expect(page).toHaveURL(expected);
+  } catch {
+    const alerts = await page.locator('.alert').allTextContents();
+    const messages = alerts.map((value) => value.trim()).filter(Boolean);
+    throw new Error(
+      `${context} failed at ${page.url()}. Server message: ${
+        messages.join(' | ') || 'No visible form error was returned.'
+      }`
+    );
+  }
+}
+
 async function signUp(page: Page, identity: string, displayName: string) {
   await page.goto('/auth/signup');
   await page.getByLabel('Display name').fill(displayName);
@@ -11,7 +29,7 @@ async function signUp(page: Page, identity: string, displayName: string) {
   await page.getByLabel('Town / suburb').fill('Richards Bay');
   await page.getByLabel('Province / region').fill('KwaZulu-Natal');
   await page.getByRole('button', { name: /Create account/ }).click();
-  await expect(page).toHaveURL(/\/auth\/check-email/);
+  await expectNavigationOrExplain(page, /\/auth\/check-email/, 'Account creation');
 }
 
 test('seller publishes, buyer favourites and contacts, seller marks sold', async ({
@@ -28,7 +46,7 @@ test('seller publishes, buyer favourites and contacts, seller marks sold', async
   await page.getByLabel('Listing title').fill(title);
   await page.getByLabel('Category').selectOption('other');
   await page.getByRole('button', { name: /Continue/ }).click();
-  await expect(page).toHaveURL(/\/sell\/[a-f0-9-]+/);
+  await expectNavigationOrExplain(page, /\/sell\/[a-f0-9-]+/, 'Draft creation');
 
   await page
     .getByLabel('Description')
