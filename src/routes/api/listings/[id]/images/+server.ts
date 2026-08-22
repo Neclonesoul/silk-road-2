@@ -58,7 +58,17 @@ export const POST = async ({ request, params, platform, locals }) => {
     await env.MEDIA.delete(key);
     throw cause;
   }
-  return json({ id, url: `/media/${key}` }, { status: 201 });
+  return json(
+    {
+      id,
+      object_key: key,
+      alt_text: '',
+      sort_order: count?.count || 0,
+      is_cover: count?.count ? 0 : 1,
+      url: `/media/${key}`
+    },
+    { status: 201 }
+  );
 };
 
 export const PATCH = async ({ request, params, platform, locals }) => {
