@@ -73,10 +73,21 @@ export const actions = {
           .bind(crypto.randomUUID(), userId, await sha256(verificationToken))
       ]);
     } catch (error) {
-      const message =
-        error instanceof Error && /unique/i.test(error.message)
-          ? 'That email address or handle is already in use.'
-          : 'We could not create your account.';
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      console.error(
+        JSON.stringify({
+          level: 'error',
+          event: 'auth.signup.db_batch_failed',
+          requestId: locals.requestId,
+          error: errorMessage
+        })
+      );
+
+      const message = /unique/i.test(errorMessage)
+        ? 'That email address or handle is already in use.'
+        : 'We could not create your account.';
+
       return fail(409, { message });
     }
     const verifyUrl = `${url.origin}/auth/verify?token=${encodeURIComponent(verificationToken)}`;
