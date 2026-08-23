@@ -14,6 +14,9 @@
   let { data, form } = $props();
   let selected = $state(0);
   const listing = $derived(data.listing as any);
+  const offers = $derived((data.offers || []) as any[]);
+  const ownOffer = $derived(data.ownOffer as any);
+  const isSeller = $derived(Boolean(data.user && data.user.id === listing.seller_id));
   const productJsonLd = $derived(
     JSON.stringify({
       '@context': 'https://schema.org',
@@ -119,6 +122,150 @@
         <ShieldCheck size={16} /> Meet safely. Never send a deposit before verifying the item and seller.
       </p>
     </aside>
+
+    {#if listing.price_negotiable}
+      <section class="offers surface" id="offers">
+        <p class="eyebrow">Direct negotiation</p>
+
+        {#if isSeller}
+          <h2>Buyer offers</h2>
+
+          {#if form?.offerAccepted}
+            <p class="offer-success">Offer accepted. This item is now reserved.</p>
+          {:else if form?.offerDeclined}
+            <p class="offer-success">Offer declined.</p>
+          {/if}
+
+          {#if offers.length}
+            <div class="offer-list">
+              {#each offers as offer}
+                <article class="offer-row">
+                  <div class="offer-copy">
+                    <div class="offer-person">
+                      <a href={`/sellers/${offer.buyer_handle}`}>
+                        {offer.buyer_name}
+                      </a>
+                      <small>@{offer.buyer_handle}</small>
+                    </div>
+
+                    <strong>{formatMoney(offer.amount_cents)}</strong>
+
+                    <span class:accepted={offer.status === 'accepted'} class="offer-status">
+                      {offer.status}
+                    </span>
+                  </div>
+
+                  {#if offer.status === 'pending' && listing.status === 'active'}
+                    <div class="offer-actions">
+                      <form method="POST" action="?/acceptOffer">
+                        <input type="hidden" name="offerId" value={offer.id} />
+                        <button class="btn btn-primary" type="submit">
+                          Accept
+                        </button>
+                      </form>
+
+                      <form method="POST" action="?/declineOffer">
+                        <input type="hidden" name="offerId" value={offer.id} />
+                        <button class="btn btn-secondary" type="submit">
+                          Decline
+                        </button>
+                      </form>
+                    </div>
+                  {:else if offer.status === 'accepted'}
+                    <p class="offer-note">
+                      Accepted — finish the sale from My listings when the trade is complete.
+                    </p>
+                  {/if}
+                </article>
+              {/each}
+            </div>
+          {:else}
+            <p class="offer-empty">
+              No offers yet. Buyers can negotiate directly while this listing remains active.
+            </p>
+          {/if}
+        {:else}
+          <h2>Make an offer</h2>
+
+          {#if form?.offerCreated}
+            <p class="offer-success">Offer sent to the seller.</p>
+          {:else if form?.offerWithdrawn}
+            <p class="offer-success">Your offer was withdrawn.</p>
+          {/if}
+
+          {#if ownOffer?.status === 'pending'}
+            <div class="buyer-offer">
+              <div>
+                <span>Your current offer</span>
+                <strong>{formatMoney(ownOffer.amount_cents)}</strong>
+                <small>Waiting for the seller</small>
+              </div>
+
+              <form method="POST" action="?/withdrawOffer">
+                <input type="hidden" name="offerId" value={ownOffer.id} />
+                <button class="btn btn-secondary" type="submit">
+                  Withdraw offer
+                </button>
+              </form>
+            </div>
+          {:else if ownOffer?.status === 'accepted'}
+            <div class="offer-success">
+              <strong>Your offer was accepted.</strong>
+              <span>The item is reserved while you complete the trade with the seller.</span>
+            </div>
+          {:else if listing.status === 'active'}
+            {#if data.user}
+              {#if ownOffer?.status === 'declined'}
+                <p class="offer-history">
+                  Your previous offer of {formatMoney(ownOffer.amount_cents)} was declined.
+                  You can make another offer.
+                </p>
+              {:else if ownOffer?.status === 'withdrawn'}
+                <p class="offer-history">
+                  Your previous offer was withdrawn. You can make another offer.
+                </p>
+              {/if}
+
+              <form class="offer-form" method="POST" action="?/makeOffer">
+                <div class="offer-input">
+                  <span>R</span>
+                  <label class="sr-only" for="offer-amount">Offer amount</label>
+                  <input
+                    id="offer-amount"
+                    name="amount"
+                    type="number"
+                    min="1"
+                    step="0.01"
+                    inputmode="decimal"
+                    placeholder="Your offer"
+                    required
+                  />
+                </div>
+
+                <button class="btn btn-primary" type="submit">
+                  Send offer
+                </button>
+              </form>
+
+              <p class="offer-note">
+                The seller can accept or decline. An accepted offer reserves the item; payment
+                remains between buyer and seller.
+              </p>
+            {:else}
+              <a
+                class="btn btn-primary"
+                href={`/auth/login?returnTo=/listings/${listing.slug}`}
+              >
+                Sign in to make an offer
+              </a>
+            {/if}
+          {:else if listing.status === 'reserved'}
+            <p class="offer-empty">This item is currently reserved.</p>
+          {/if}
+        {/if}
+      </section>
+    {/if}
+
     <section class="description surface">
       <h2>About this item</h2>
       <p class="body">{listing.description}</p>
@@ -172,9 +319,15 @@
     </b>
     <small>{listing.status}</small>
   </span>
-  <form method="POST" action="?/contact">
-    <button class="btn btn-primary" type="submit">Message seller</button>
-  </form>
+  <div class="mobile-actions">
+    {#if listing.price_negotiable && listing.status === 'active' && !isSeller}
+      <a class="btn btn-secondary" href="#offers">Make offer</a>
+    {/if}
+
+    <form method="POST" action="?/contact">
+      <button class="btn btn-primary" type="submit">Message seller</button>
+    </form>
+  </div>
 </div>
 
 <style>
@@ -270,6 +423,163 @@
     white-space: pre-wrap;
     max-width: 70ch;
   }
+
+  .offers {
+    padding: clamp(1rem, 3vw, 1.6rem);
+    scroll-margin-top: 90px;
+  }
+
+  .offers h2 {
+    margin: 0.2rem 0 1rem;
+  }
+
+  .offer-list {
+    display: grid;
+    gap: 0.7rem;
+  }
+
+  .offer-row {
+    display: grid;
+    gap: 0.8rem;
+    padding: 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--canvas);
+  }
+
+  .offer-copy {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.25rem 1rem;
+  }
+
+  .offer-person {
+    min-width: 0;
+    display: grid;
+  }
+
+  .offer-person a {
+    font-weight: 800;
+  }
+
+  .offer-person small,
+  .offer-note,
+  .offer-history,
+  .offer-empty {
+    color: var(--muted);
+  }
+
+  .offer-copy > strong {
+    grid-row: span 2;
+    font-size: 1.25rem;
+  }
+
+  .offer-status {
+    width: fit-content;
+    padding: 0.18rem 0.5rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--muted) 12%, transparent);
+    color: var(--muted);
+    font-size: 0.67rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .offer-status.accepted {
+    color: var(--green-deep);
+    background: color-mix(in srgb, var(--green) 12%, transparent);
+  }
+
+  .offer-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .offer-actions form {
+    flex: 1 1 120px;
+  }
+
+  .offer-actions button {
+    width: 100%;
+  }
+
+  .offer-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.6rem;
+    align-items: stretch;
+  }
+
+  .offer-input {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--canvas);
+    overflow: hidden;
+  }
+
+  .offer-input span {
+    padding-left: 0.9rem;
+    color: var(--muted);
+    font-weight: 800;
+  }
+
+  .offer-input input {
+    min-width: 0;
+    border: 0;
+    padding: 0.85rem 0.7rem;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    outline: none;
+  }
+
+  .buyer-offer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--canvas);
+  }
+
+  .buyer-offer > div {
+    display: grid;
+  }
+
+  .buyer-offer strong {
+    font-size: 1.35rem;
+  }
+
+  .buyer-offer span,
+  .buyer-offer small {
+    color: var(--muted);
+  }
+
+  .offer-success {
+    display: grid;
+    gap: 0.2rem;
+    padding: 0.8rem 0.9rem;
+    border: 1px solid color-mix(in srgb, var(--green) 35%, var(--border));
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--green) 8%, var(--paper));
+    color: var(--green-deep);
+  }
+
+  .offer-note,
+  .offer-history,
+  .offer-empty {
+    margin: 0.8rem 0 0;
+    font-size: 0.78rem;
+    line-height: 1.5;
+  }
   dl {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -346,6 +656,31 @@
   .mobile-cta small {
     color: var(--muted);
     text-transform: capitalize;
+  }
+
+  .mobile-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .mobile-actions form {
+    margin: 0;
+  }
+
+  .mobile-actions .btn {
+    white-space: nowrap;
+  }
+
+  @media (max-width: 520px) {
+    .offer-form {
+      grid-template-columns: 1fr;
+    }
+
+    .buyer-offer {
+      align-items: stretch;
+      flex-direction: column;
+    }
   }
   @media (min-width: 820px) {
     .detail {
