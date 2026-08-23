@@ -10,7 +10,7 @@ export default defineConfig({
   use: { baseURL: 'http://127.0.0.1:4173', trace: 'on-first-retry', screenshot: 'only-on-failure' },
   webServer: {
     command:
-      'CLOUDFLARE_INCLUDE_PROCESS_ENV=true APP_ENV=development npm run dev -- --host 127.0.0.1 --port 4173',
+      'CLOUDFLARE_INCLUDE_PROCESS_ENV=true APP_ENV=development npx wrangler dev --local --ip 127.0.0.1 --port 4173',
     url: 'http://127.0.0.1:4173',
     reuseExistingServer: !process.env.CI,
     timeout: 120000
