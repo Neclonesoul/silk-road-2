@@ -5,10 +5,37 @@
 </script>
 
 <nav aria-label="Mobile navigation">
-  <a href="/"><Compass /><span>Explore</span></a><a href="/search"><Search /><span>Search</span></a
-  ><a class="sell" href="/sell"><span class="orb"><Plus /></span><span>Sell</span></a><a
-    href="/messages"><MessageCircle /><span>Messages</span></a
-  ><a href="/you"><UserRound /><span>You</span></a>
+  <a href="/">
+    <Compass />
+    <span>Explore</span>
+  </a>
+
+  <a href="/search">
+    <Search />
+    <span>Search</span>
+  </a>
+
+  <a class="sell" href="/sell">
+    <span class="orb"><Plus /></span>
+    <span>Sell</span>
+  </a>
+
+  <a href="/messages">
+    <span class="message-icon">
+      <MessageCircle />
+      {#if unreadMessages > 0}
+        <strong class="badge" aria-label={`${unreadMessages} unread messages`}>
+          {unreadMessages > 99 ? '99+' : unreadMessages}
+        </strong>
+      {/if}
+    </span>
+    <span>Messages</span>
+  </a>
+
+  <a href="/you">
+    <UserRound />
+    <span>You</span>
+  </a>
 </nav>
 
 <style>
@@ -26,6 +53,7 @@
     border-top: 1px solid var(--border);
     backdrop-filter: blur(18px);
   }
+
   a {
     min-height: 54px;
     display: flex;
@@ -37,9 +65,11 @@
     font-size: 0.66rem;
     font-weight: 700;
   }
+
   a :global(svg) {
     width: 21px;
   }
+
   .orb {
     width: 44px;
     height: 44px;
@@ -52,6 +82,7 @@
     box-shadow: 0 7px 20px color-mix(in srgb, var(--green) 35%, transparent);
     border: 4px solid var(--paper);
   }
+
   .sell {
     color: var(--green-deep);
   }
@@ -79,6 +110,7 @@
     line-height: 1;
     font-weight: 800;
   }
+
   @media (min-width: 820px) {
     nav {
       display: none;

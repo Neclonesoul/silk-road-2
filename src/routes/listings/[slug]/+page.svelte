@@ -100,13 +100,14 @@
       </p>
       <h1>{listing.title}</h1>
       <div class="facts">
-        <span><MapPin size={17} />{listing.locality}, {listing.region}</span><span
-          ><Clock3 size={17} />{relativeTime(listing.published_at)}</span
-        ><span
-          ><CheckCircle2 size={17} />{String(listing.condition)
+        <span><MapPin size={17} />{listing.locality}, {listing.region}</span>
+        <span><Clock3 size={17} />{relativeTime(listing.published_at)}</span>
+        <span>
+          <CheckCircle2 size={17} />
+          {String(listing.condition)
             .replace('-', ' ')
-            .replace(/^./, (value) => value.toUpperCase())
-        >
+            .replace(/^./, (value) => value.toUpperCase())}
+        </span>
       </div>
       {#if form?.message}<p class="alert">{form.message}</p>{/if}
       <form method="POST" action="?/contact">
