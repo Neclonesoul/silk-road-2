@@ -42,17 +42,13 @@ test('seller publishes, buyer favourites and contacts, seller marks sold', async
 
   await page
     .getByLabel('Description')
-    .fill(
-      'A complete, honestly described workshop tool set in very good working condition.'
-    );
+    .fill('A complete, honestly described workshop tool set in very good working condition.');
 
   await page.getByLabel('Price (R)').fill('2450');
   await page.getByRole('button', { name: 'Save draft' }).click();
   await expect(page.getByText('Draft saved.')).toBeVisible();
 
-  await page
-    .locator('input[type="file"]')
-    .setInputFiles('static/icons/icon-192.png');
+  await page.locator('input[type="file"]').setInputFiles('static/icons/icon-192.png');
 
   await expect(page.getByText('Cover', { exact: true })).toBeVisible({
     timeout: 30_000
@@ -73,24 +69,18 @@ test('seller publishes, buyer favourites and contacts, seller marks sold', async
   await page.goto(listingUrl);
 
   await page.getByRole('button', { name: 'Add to favourites' }).click();
-  await expect(
-    page.getByRole('button', { name: 'Remove from favourites' })
-  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Remove from favourites' })).toBeVisible();
 
   await Promise.all([
     page.waitForURL(/\/messages\/[a-f0-9-]+/, { timeout: 30_000 }),
     page.getByRole('button', { name: 'Message seller' }).first().click()
   ]);
 
-  await page
-    .getByLabel('Message')
-    .fill('Hello, is this tool set still available?');
+  await page.getByLabel('Message').fill('Hello, is this tool set still available?');
 
   await page.getByRole('button', { name: 'Send message' }).click();
 
-  await expect(
-    page.getByText('Hello, is this tool set still available?')
-  ).toBeVisible();
+  await expect(page.getByText('Hello, is this tool set still available?')).toBeVisible();
 
   await page.goto('/you');
   await page.getByRole('button', { name: 'Sign out' }).click();
