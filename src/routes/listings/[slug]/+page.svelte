@@ -159,16 +159,12 @@
                     <div class="offer-actions">
                       <form method="POST" action="?/acceptOffer">
                         <input type="hidden" name="offerId" value={offer.id} />
-                        <button class="btn btn-primary" type="submit">
-                          Accept
-                        </button>
+                        <button class="btn btn-primary" type="submit"> Accept </button>
                       </form>
 
                       <form method="POST" action="?/declineOffer">
                         <input type="hidden" name="offerId" value={offer.id} />
-                        <button class="btn btn-secondary" type="submit">
-                          Decline
-                        </button>
+                        <button class="btn btn-secondary" type="submit"> Decline </button>
                       </form>
                     </div>
                   {:else if offer.status === 'accepted'}
@@ -203,9 +199,7 @@
 
               <form method="POST" action="?/withdrawOffer">
                 <input type="hidden" name="offerId" value={ownOffer.id} />
-                <button class="btn btn-secondary" type="submit">
-                  Withdraw offer
-                </button>
+                <button class="btn btn-secondary" type="submit"> Withdraw offer </button>
               </form>
             </div>
           {:else if ownOffer?.status === 'accepted'}
@@ -217,8 +211,8 @@
             {#if data.user}
               {#if ownOffer?.status === 'declined'}
                 <p class="offer-history">
-                  Your previous offer of {formatMoney(ownOffer.amount_cents)} was declined.
-                  You can make another offer.
+                  Your previous offer of {formatMoney(ownOffer.amount_cents)} was declined. You can make
+                  another offer.
                 </p>
               {:else if ownOffer?.status === 'withdrawn'}
                 <p class="offer-history">
@@ -242,9 +236,7 @@
                   />
                 </div>
 
-                <button class="btn btn-primary" type="submit">
-                  Send offer
-                </button>
+                <button class="btn btn-primary" type="submit"> Send offer </button>
               </form>
 
               <p class="offer-note">
@@ -252,10 +244,7 @@
                 remains between buyer and seller.
               </p>
             {:else}
-              <a
-                class="btn btn-primary"
-                href={`/auth/login?returnTo=/listings/${listing.slug}`}
-              >
+              <a class="btn btn-primary" href={`/auth/login?returnTo=/listings/${listing.slug}`}>
                 Sign in to make an offer
               </a>
             {/if}
