@@ -91,14 +91,22 @@
         </div>
       </div>
       <p class="price">
-        {formatMoney(listing.price_cents)}
-        {#if listing.price_negotiable}<small>negotiable</small>{/if}
+        {#if Number(listing.price_cents) === 0 && listing.price_negotiable}
+          Make an offer
+        {:else}
+          {formatMoney(listing.price_cents)}
+        {/if}
+        {#if listing.price_negotiable}<small>Open to offers</small>{/if}
       </p>
       <h1>{listing.title}</h1>
       <div class="facts">
         <span><MapPin size={17} />{listing.locality}, {listing.region}</span><span
           ><Clock3 size={17} />{relativeTime(listing.published_at)}</span
-        ><span><CheckCircle2 size={17} />{String(listing.condition).replace('-', ' ')}</span>
+        ><span
+          ><CheckCircle2 size={17} />{String(listing.condition)
+            .replace('-', ' ')
+            .replace(/^./, (value) => value.toUpperCase())
+        >
       </div>
       {#if form?.message}<p class="alert">{form.message}</p>{/if}
       <form method="POST" action="?/contact">
@@ -153,7 +161,16 @@
     </section>{/if}
 </div>
 <div class="mobile-cta">
-  <span><b>{formatMoney(listing.price_cents)}</b><small>{listing.status}</small></span>
+  <span>
+    <b>
+      {#if Number(listing.price_cents) === 0 && listing.price_negotiable}
+        Make an offer
+      {:else}
+        {formatMoney(listing.price_cents)}
+      {/if}
+    </b>
+    <small>{listing.status}</small>
+  </span>
   <form method="POST" action="?/contact">
     <button class="btn btn-primary" type="submit">Message seller</button>
   </form>

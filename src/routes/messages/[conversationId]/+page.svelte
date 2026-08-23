@@ -1,47 +1,136 @@
 <script lang="ts">
   import { ArrowLeft, Circle, Send, ShieldAlert } from '@lucide/svelte';
   import { formatMoney, relativeTime } from '$lib/utils';
+
   let { data, form } = $props();
+
   const conversation = $derived(data.conversation as any);
   const currentUserId = $derived(data.user!.id);
+
   let messages = $state<any[]>([]);
   let typing = $state(false);
   let connection = $state('connecting');
-  let socket: WebSocket;
+
+  let socket: WebSocket | undefined;
+  let retryTimer: number | undefined;
+  let heartbeatTimer: number | undefined;
+  let typingTimer: number | undefined;
+
   $effect.pre(() => {
     messages = [...data.messages];
   });
+
   $effect(() => {
-    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    socket = new WebSocket(`${protocol}//${location.host}/api/realtime/${conversation.id}`);
-    socket.onopen = () => (connection = 'live');
-    socket.onclose = () => (connection = 'reconnecting');
-    socket.onmessage = (event) => {
-      const payload = JSON.parse(event.data);
-      if (payload.type === 'message' && !messages.some((m) => m.id === payload.id))
-        messages = [
-          ...messages,
-          {
-            id: payload.id,
-            sender_id: payload.senderId,
-            content: payload.content,
-            created_at: payload.createdAt
-          }
-        ];
-      if (payload.type === 'typing') typing = payload.active;
+    const conversationId = conversation.id;
+    let disposed = false;
+    let retryAttempt = 0;
+
+    const clearHeartbeat = () => {
+      if (heartbeatTimer !== undefined) {
+        window.clearInterval(heartbeatTimer);
+        heartbeatTimer = undefined;
+      }
     };
-    return () => socket?.close();
-  });
-  let typingTimer: number;
-  function sendTyping() {
-    if (socket?.readyState === 1) {
-      socket.send(JSON.stringify({ type: 'typing', active: true }));
-      clearTimeout(typingTimer);
-      typingTimer = window.setTimeout(
-        () => socket.send(JSON.stringify({ type: 'typing', active: false })),
-        1200
+
+    const connect = () => {
+      if (disposed) return;
+
+      connection = retryAttempt ? 'reconnecting' : 'connecting';
+
+      const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const ws = new WebSocket(
+        `${protocol}//${location.host}/api/realtime/${conversationId}`
       );
+
+      socket = ws;
+
+      ws.onopen = () => {
+        retryAttempt = 0;
+        connection = 'live';
+
+        clearHeartbeat();
+
+        heartbeatTimer = window.setInterval(() => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'ping' }));
+          }
+        }, 25_000);
+      };
+
+      ws.onmessage = (event) => {
+        const payload = JSON.parse(event.data);
+
+        if (
+          payload.type === 'message' &&
+          !messages.some((message) => message.id === payload.id)
+        ) {
+          messages = [
+            ...messages,
+            {
+              id: payload.id,
+              sender_id: payload.senderId,
+              content: payload.content,
+              created_at: payload.createdAt
+            }
+          ];
+        }
+
+        if (payload.type === 'typing') {
+          typing = payload.active;
+        }
+      };
+
+      ws.onerror = () => {
+        if (ws.readyState !== WebSocket.CLOSED) {
+          ws.close();
+        }
+      };
+
+      ws.onclose = () => {
+        clearHeartbeat();
+
+        if (disposed) return;
+
+        connection = 'reconnecting';
+        retryAttempt += 1;
+
+        const delay = Math.min(1000 * 2 ** Math.min(retryAttempt - 1, 4), 15_000);
+
+        retryTimer = window.setTimeout(connect, delay);
+      };
+    };
+
+    connect();
+
+    return () => {
+      disposed = true;
+
+      if (retryTimer !== undefined) {
+        window.clearTimeout(retryTimer);
+      }
+
+      clearHeartbeat();
+
+      if (socket && socket.readyState < WebSocket.CLOSING) {
+        socket.close(1000, 'Conversation closed');
+      }
+    };
+  });
+
+  function sendTyping() {
+    if (socket?.readyState !== WebSocket.OPEN) return;
+
+    socket.send(JSON.stringify({ type: 'typing', active: true }));
+
+    if (typingTimer !== undefined) {
+      window.clearTimeout(typingTimer);
     }
+
+    typingTimer = window.setTimeout(() => {
+      if (socket?.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: 'typing', active: false }));
+      }
+    }, 1200);
   }
 </script>
 

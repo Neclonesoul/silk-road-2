@@ -26,4 +26,4 @@
   shortName={data.config.shortName}
 />
 <main id="content">{@render children()}</main>
-<BottomNav />
+<BottomNav unreadMessages={data.unreadMessages} />

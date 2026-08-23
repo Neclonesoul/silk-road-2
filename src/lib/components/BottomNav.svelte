@@ -1,5 +1,7 @@
 <script lang="ts">
   import { Compass, Search, Plus, MessageCircle, UserRound } from '@lucide/svelte';
+
+  let { unreadMessages = 0 } = $props<{ unreadMessages?: number }>();
 </script>
 
 <nav aria-label="Mobile navigation">
@@ -52,6 +54,30 @@
   }
   .sell {
     color: var(--green-deep);
+  }
+
+  .message-icon {
+    position: relative;
+    display: grid;
+    place-items: center;
+  }
+
+  .badge {
+    position: absolute;
+    top: -9px;
+    right: -13px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    display: grid;
+    place-items: center;
+    border: 2px solid var(--paper);
+    border-radius: 999px;
+    background: var(--green);
+    color: white;
+    font-size: 0.58rem;
+    line-height: 1;
+    font-weight: 800;
   }
   @media (min-width: 820px) {
     nav {
