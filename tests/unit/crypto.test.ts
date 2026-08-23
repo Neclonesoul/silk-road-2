@@ -5,6 +5,7 @@ describe('authentication primitives', () => {
   it('hashes and verifies without storing the password', async () => {
     const password = 'Long-Unique-Passphrase-7';
     const stored = await hashPassword(password);
+    expect(stored).toMatch(/^pbkdf2-sha256\$100000\$/);
     expect(stored).not.toContain(password);
     expect(await verifyPassword(stored, password)).toBe(true);
     expect(await verifyPassword(stored, 'wrong-password')).toBe(false);

@@ -1,5 +1,8 @@
 const encoder = new TextEncoder();
 
+const PBKDF2_ITERATIONS = 100_000;
+const PBKDF2_MAX_ITERATIONS = 100_000;
+
 function bytesToBase64Url(bytes: Uint8Array): string {
   let raw = '';
   for (const byte of bytes) raw += String.fromCharCode(byte);
@@ -29,7 +32,7 @@ export async function hashPassword(password: string, salt = randomToken(18)): Pr
   const key = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, [
     'deriveBits'
   ]);
-  const iterations = 310_000;
+  const iterations = PBKDF2_ITERATIONS;
   const saltBytes = base64UrlToBytes(salt);
   const bits = await crypto.subtle.deriveBits(
     { name: 'PBKDF2', hash: 'SHA-256', salt: saltBytes.buffer as ArrayBuffer, iterations },
@@ -42,6 +45,10 @@ export async function hashPassword(password: string, salt = randomToken(18)): Pr
 export async function verifyPassword(stored: string, password: string): Promise<boolean> {
   const [algorithm, iterationText, salt, expected] = stored.split('$');
   if (algorithm !== 'pbkdf2-sha256' || !salt || !expected) return false;
+  const iterations = Number(iterationText);
+  if (!Number.isInteger(iterations) || iterations < 1 || iterations > PBKDF2_MAX_ITERATIONS)
+    return false;
+
   const key = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, [
     'deriveBits'
   ]);
@@ -51,7 +58,7 @@ export async function verifyPassword(stored: string, password: string): Promise<
       name: 'PBKDF2',
       hash: 'SHA-256',
       salt: saltBytes.buffer as ArrayBuffer,
-      iterations: Number(iterationText)
+      iterations
     },
     key,
     256
