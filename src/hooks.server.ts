@@ -26,10 +26,23 @@ export const handle: Handle = async ({ event, resolve }) => {
     }
   }
   const response = await resolve(event);
-  for (const [name, value] of Object.entries(securityHeaders)) response.headers.set(name, value);
+
+  // WebSocket upgrade responses have immutable headers in the Workers runtime.
+  // Return them untouched or the successful 101 upgrade becomes a 500.
+  if (event.request.headers.get('upgrade')?.toLowerCase() === 'websocket') {
+    return response;
+  }
+
+  for (const [name, value] of Object.entries(securityHeaders)) {
+    response.headers.set(name, value);
+  }
+
   response.headers.set('X-Request-Id', event.locals.requestId);
-  if (event.url.pathname.startsWith('/api/') || event.locals.user)
+
+  if (event.url.pathname.startsWith('/api/') || event.locals.user) {
     response.headers.set('Cache-Control', 'private, no-store');
+  }
+
   return response;
 };
 
