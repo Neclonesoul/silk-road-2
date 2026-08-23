@@ -1,12 +1,12 @@
+import { DurableObject } from 'cloudflare:workers';
+
 interface Attachment {
   userId: string;
 }
 
-export class ChatRoom {
-  constructor(private state: DurableObjectState) {}
-
+export class ChatRoom extends DurableObject<Env> {
   private sockets(): WebSocket[] {
-    return this.state.getWebSockets();
+    return this.ctx.getWebSockets();
   }
 
   private broadcast(payload: Record<string, unknown>, except?: WebSocket) {
@@ -38,7 +38,7 @@ export class ChatRoom {
     const pair = new WebSocketPair();
     const client = pair[0];
     const server = pair[1];
-    this.state.acceptWebSocket(server);
+    this.ctx.acceptWebSocket(server);
     server.serializeAttachment({ userId } satisfies Attachment);
     this.broadcast({ type: 'presence', userId, state: 'online' }, server);
     return new Response(null, { status: 101, webSocket: client });
