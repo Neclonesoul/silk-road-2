@@ -76,17 +76,28 @@
       };
 
       ws.onerror = () => {
-        if (ws.readyState !== WebSocket.CLOSED) {
-          ws.close();
-        }
+        console.error('realtime websocket error', {
+          url: ws.url,
+          readyState: ws.readyState
+        });
       };
 
-      ws.onclose = () => {
+      ws.onclose = (event) => {
         clearHeartbeat();
+
+        console.error('realtime websocket closed', {
+          code: event.code,
+          reason: event.reason,
+          wasClean: event.wasClean,
+          url: ws.url
+        });
 
         if (disposed) return;
 
-        connection = 'reconnecting';
+        connection =
+          event.code || event.reason
+            ? `reconnecting · ${event.code}${event.reason ? ` · ${event.reason}` : ''}`
+            : 'reconnecting';
         retryAttempt += 1;
 
         const delay = Math.min(1000 * 2 ** Math.min(retryAttempt - 1, 4), 15_000);
