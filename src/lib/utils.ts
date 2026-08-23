@@ -18,17 +18,32 @@ export function slugify(value: string): string {
     .slice(0, 72);
 }
 
+function parseDatabaseDate(value: string): Date {
+  const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value)
+    ? `${value.replace(' ', 'T')}Z`
+    : value;
+
+  return new Date(normalized);
+}
+
 export function relativeTime(value: string | null, now = new Date()): string {
   if (!value) return 'Not published';
-  const seconds = Math.max(0, Math.floor((now.getTime() - new Date(value).getTime()) / 1000));
+
+  const date = parseDatabaseDate(value);
+  const seconds = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 1000));
+
   if (seconds < 60) return 'Just now';
+
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes}m ago`;
+
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
+
   const days = Math.floor(hours / 24);
   if (days < 30) return `${days}d ago`;
-  return new Intl.DateTimeFormat(brand.locale, { dateStyle: 'medium' }).format(new Date(value));
+
+  return new Intl.DateTimeFormat(brand.locale, { dateStyle: 'medium' }).format(date);
 }
 
 export function safeReturnTo(value: FormDataEntryValue | null, fallback = '/'): string {
