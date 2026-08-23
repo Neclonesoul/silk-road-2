@@ -38,9 +38,7 @@
       connection = retryAttempt ? 'reconnecting' : 'connecting';
 
       const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const ws = new WebSocket(
-        `${protocol}//${location.host}/api/realtime/${conversationId}`
-      );
+      const ws = new WebSocket(`${protocol}//${location.host}/api/realtime/${conversationId}`);
 
       socket = ws;
 
@@ -60,10 +58,7 @@
       ws.onmessage = (event) => {
         const payload = JSON.parse(event.data);
 
-        if (
-          payload.type === 'message' &&
-          !messages.some((message) => message.id === payload.id)
-        ) {
+        if (payload.type === 'message' && !messages.some((message) => message.id === payload.id)) {
           messages = [
             ...messages,
             {
