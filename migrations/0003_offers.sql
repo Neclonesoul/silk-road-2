@@ -1,4 +1,4 @@
-CREATE TABLE offers (
+CREATE TABLE IF NOT EXISTS offers (
   id TEXT PRIMARY KEY,
   listing_id TEXT NOT NULL REFERENCES listings(id) ON DELETE RESTRICT,
   buyer_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
@@ -16,19 +16,19 @@ CREATE TABLE offers (
   CHECK (buyer_id <> seller_id)
 );
 
-CREATE INDEX offers_listing_status_idx
+CREATE INDEX IF NOT EXISTS offers_listing_status_idx
   ON offers(listing_id, status, created_at DESC);
 
-CREATE INDEX offers_buyer_status_idx
+CREATE INDEX IF NOT EXISTS offers_buyer_status_idx
   ON offers(buyer_id, status, created_at DESC);
 
-CREATE INDEX offers_seller_status_idx
+CREATE INDEX IF NOT EXISTS offers_seller_status_idx
   ON offers(seller_id, status, created_at DESC);
 
-CREATE UNIQUE INDEX offers_one_pending_per_buyer_idx
+CREATE UNIQUE INDEX IF NOT EXISTS offers_one_pending_per_buyer_idx
   ON offers(listing_id, buyer_id)
   WHERE status = 'pending';
 
-CREATE UNIQUE INDEX offers_one_accepted_per_listing_idx
+CREATE UNIQUE INDEX IF NOT EXISTS offers_one_accepted_per_listing_idx
   ON offers(listing_id)
   WHERE status = 'accepted';
